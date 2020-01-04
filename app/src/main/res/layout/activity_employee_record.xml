@@ -7,7 +7,10 @@
     android:orientation="vertical"
     tools:context=".EmployeeRecord">
 
-
+    <ListView
+        android:id="@+id/ListView1ID"
+        android:layout_width="fill_parent"
+        android:layout_height="306dp" />
 
 
 </LinearLayout>

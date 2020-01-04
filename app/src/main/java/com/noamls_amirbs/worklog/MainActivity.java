@@ -68,6 +68,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startTime = SystemClock.uptimeMillis();
                 handler.postDelayed(activeTimer,0);
                 break;
+
             case R.id.employee_record_but:
                 Intent intent=new Intent(MainActivity.this,EmployeeRecord.class);
                 startActivity(intent);
