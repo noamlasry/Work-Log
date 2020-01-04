@@ -86,4 +86,9 @@ public class EmployeeRecord extends AppCompatActivity
         }
         catch (Exception e) { Log.d("debug", "Error Creating Database"); }
     }
+    public void onDestroy() {
+
+        super.onDestroy();
+        employeeRecordDB.close();
+    }
 }

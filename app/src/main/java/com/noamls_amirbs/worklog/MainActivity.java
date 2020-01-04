@@ -88,6 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
             case R.id.exit_btn:
                 createEvent();
+                resetTimer();
                 break;
 
             case R.id.employee_record_but:
@@ -97,6 +98,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         }
 
+    }
+
+    public void resetTimer()
+    {
+        textTimer.setText("00:00");
+        handler.removeCallbacks(activeTimer);
     }
 
     public String getKnowTime()
@@ -133,6 +140,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         super.onResume();
 
+    }
+
+    public void onDestroy() {
+
+        super.onDestroy();
+        employeeRecordDB.close();
     }
 
     public void createDB()
