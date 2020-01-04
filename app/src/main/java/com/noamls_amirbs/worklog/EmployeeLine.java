@@ -5,12 +5,12 @@ import java.util.Date;
 public class EmployeeLine
 {
     String date,interClock,exitClock,total;
-    EmployeeLine(String date,String interClock,String exitClock,String total)
+    EmployeeLine(String total,String interClock,String exitClock,String date)
     {
-       this.date = date;
+       this.total = total;
        this.interClock = interClock;
        this.exitClock = exitClock;
-       this.total = total;
+       this.date = date;
     }
 
     public void setDate(String date){this.date = date;}
