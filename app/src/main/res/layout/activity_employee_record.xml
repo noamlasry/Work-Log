@@ -7,10 +7,92 @@
     android:orientation="vertical"
     tools:context=".EmployeeRecord">
 
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+
+        <TextView
+            android:text="Total:"
+            android:textSize="80px"
+            android:textColor="@android:color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </TextView>
+        <TextView
+            android:layout_marginLeft="100px"
+            android:text="Exit:"
+            android:textSize="80px"
+            android:textColor="@android:color/holo_red_dark"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginLeft="100px"
+            android:text="Inter:"
+            android:textColor="@android:color/holo_green_dark"
+            android:textSize="80px">
+
+        </TextView>
+        <TextView
+            android:layout_marginLeft="100px"
+            android:text="Date:"
+            android:textColor="@android:color/holo_blue_dark"
+            android:textSize="80px"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+
+    </LinearLayout>
+
     <ListView
         android:id="@+id/ListView1ID"
         android:layout_width="fill_parent"
-        android:layout_height="306dp" />
+        android:layout_height="501dp"
+        android:layout_marginTop="30px" />
+
+    <LinearLayout
+        android:orientation="horizontal"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+
+
+        <TextView
+            android:text="Hours:"
+            android:textSize="80px"
+            android:layout_marginLeft="20px"
+            android:textColor="@android:color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </TextView>
+        <TextView
+            android:text=""
+            android:textSize="80px"
+            android:textColor="@android:color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+        </TextView>
+
+        <TextView
+            android:layout_marginLeft="400px"
+            android:text="reports:"
+            android:textSize="80px"
+            android:textColor="@android:color/black"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+
+        </TextView>
+
+
+    </LinearLayout>
 
 
 </LinearLayout>
