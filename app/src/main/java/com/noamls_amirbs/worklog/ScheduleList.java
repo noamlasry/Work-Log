@@ -26,8 +26,15 @@ public class ScheduleList extends ArrayAdapter<EmployeeLine>
         EmployeeLine employeeLine = getItem(position);
 
 
-        TextView nameTextView = listItemView.findViewById(R.id.textView1);
-        nameTextView.setText(employeeLine.getInterClock());
+        TextView totalText = listItemView.findViewById(R.id.total_txt);
+        TextView exitText = listItemView.findViewById(R.id.exit_txt);
+        TextView interText = listItemView.findViewById(R.id.inter_txt);
+        TextView dateText = listItemView.findViewById(R.id.date_txt);
+
+        totalText.setText(employeeLine.getTotal());
+        exitText.setText(employeeLine.getExitClock());
+        interText.setText(employeeLine.getInterClock());
+        dateText.setText(employeeLine.getDate());
 
         return listItemView;
     }
