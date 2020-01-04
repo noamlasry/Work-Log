@@ -2,6 +2,7 @@ package com.noamls_amirbs.worklog;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
@@ -13,12 +14,14 @@ import android.widget.Toast;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
-
-    Button insertButton,exitButton;
+    //===== timer setting ==============================//
     private Handler handler;
     private TextView textTimer;
     int second,minute,hours,milliscond;
     long milliseconfTime,startTime,TimeBuff,update=0L;
+    //=================================================//
+    Button insertButton,exitButton,employeeRecordBut;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -28,50 +31,47 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         textTimer = (TextView)findViewById(R.id.textTimer);
         insertButton = (Button)findViewById(R.id.insert_btn);
+        employeeRecordBut = (Button)findViewById(R.id.employee_record_but);
         insertButton.setOnClickListener(this);
+        employeeRecordBut.setOnClickListener(this);
+        //======= init timer variable ===================================================//
         handler = new Handler();
         milliseconfTime = 0L ;
-        startTime = 0L ;
-        TimeBuff = 0L ;
-        update = 0L ;
-        second = 0 ;
-        minute = 0 ;
-        hours = 0 ;
-        
+        startTime = 0L ;TimeBuff = 0L ;update = 0L ;second = 0 ;minute = 0 ;hours = 0 ;
+        //=============================================================================//
+
     }
-    private Runnable updateTimerMethod = new Runnable()
+    //===== the timer function witch will be activate by INSERT button ================//
+    private Runnable activeTimer = new Runnable()
     {
-
-        public void run() { // game timer , active than the screen on
+        public void run()
+        {
             milliseconfTime = SystemClock.uptimeMillis() - startTime;
-
-
             update = TimeBuff + milliseconfTime;
             second = (int) (update / 1000);
             minute = second / 60;
             hours = minute / 60;
             second = second % 60;
-
             milliscond = (int)(update % 1000);
 
             textTimer.setText(String.format("%02d:%02d",minute,second));
             handler.postDelayed(this, 0);
         }
-
     };
 
-
-    @Override
+    //===== here is the click control, all the widget that will be clickable will be here ==//
     public void onClick(View v)
     {
         switch (v.getId())
         {
             case R.id.insert_btn:
-                Log.d("debug","debug");
-                Toast.makeText(MainActivity.this,"dsdsd",Toast.LENGTH_SHORT).show();
-
                 startTime = SystemClock.uptimeMillis();
-                handler.postDelayed(updateTimerMethod,0);
+                handler.postDelayed(activeTimer,0);
+                break;
+            case R.id.employee_record_but:
+                Intent intent=new Intent(MainActivity.this,EmployeeRecord.class);
+                startActivity(intent);
+                finish();
                 break;
 
         }
