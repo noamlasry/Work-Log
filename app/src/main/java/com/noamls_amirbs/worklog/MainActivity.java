@@ -13,15 +13,25 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.Locale;
+import java.util.TimeZone;
+
+
 public class MainActivity extends AppCompatActivity implements View.OnClickListener
 {
-    public static final String MY_DB_NAME = "contacts.db";
-    private SQLiteDatabase contactsDB = null;
+
+    public static final String MY_DB_NAME = "employeeRecord.db";
+    private SQLiteDatabase employeeRecordDB = null;
     //===== timer setting ==============================//
     private Handler handler;
     private TextView textTimer;
     int second,minute,hours,milliscond;
     long milliseconfTime,startTime,TimeBuff,update=0L;
+    String startTimeShift = "----";
     //=================================================//
     Button insertButton,exitButton,employeeRecordBut;
 
@@ -31,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
 
         textTimer = (TextView)findViewById(R.id.textTimer);
         insertButton = (Button)findViewById(R.id.insert_btn);
@@ -72,10 +83,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.insert_btn:
                 startTime = SystemClock.uptimeMillis();
                 handler.postDelayed(activeTimer,0);
+                startTimeShift = getKnowTime();
                 break;
 
             case R.id.exit_btn:
-                Toast.makeText(this, " click!", Toast.LENGTH_SHORT).show();
                 createEvent();
                 break;
 
@@ -88,19 +99,34 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
+    public String getKnowTime()
+    {
+        DateFormat now_clock = new SimpleDateFormat("HH:mm");
+        now_clock.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
+        String curTime = now_clock.format(new Date());
+        return curTime;
+    }
+
+    public String getKnowDate()
+    {
+        DateFormat now_date = new SimpleDateFormat("yyyy-MM-dd");
+        now_date.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
+        String curDate = now_date.format(new Date());
+        return curDate;
+    }
+
+
     public void createEvent()
     {
         createDB();
 
-        String str1 = "1";
-        String str2 = "2";
-        String str3 = "3";
-        String str4 = "4";
-        
-        String sql = "INSERT INTO contacts (total, exit, inter, date) " +
-                "VALUES ('" + str1 + "', '" + str2 + "', '" + str3 + "', '" + str4 + "');";
-        contactsDB.execSQL(sql);
-        Toast.makeText(this, str1 + " was insert!", Toast.LENGTH_SHORT).show();
+        String timerCount = textTimer.getText().toString();
+
+
+        String sql = "INSERT INTO employeeRecord (total, exit, inter, date) " +
+                "VALUES ('" + timerCount + "', '" + getKnowTime() + "', '" + startTimeShift + "', '" + getKnowDate() + "');";
+        employeeRecordDB.execSQL(sql);
+        Toast.makeText(this, "insert!", Toast.LENGTH_SHORT).show();
     }
 
     public void onResume() {
@@ -113,9 +139,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     {
         try
         {
-            contactsDB = openOrCreateDatabase(MY_DB_NAME, MODE_PRIVATE, null);
-            String sql = "CREATE TABLE IF NOT EXISTS contacts (id integer primary key, total VARCHAR, exit VARCHAR, inter VARCHAR, date VARCHAR);";
-            contactsDB.execSQL(sql);
+            employeeRecordDB = openOrCreateDatabase(MY_DB_NAME, MODE_PRIVATE, null);
+            String sql = "CREATE TABLE IF NOT EXISTS employeeRecord (id integer primary key, total VARCHAR, exit VARCHAR, inter VARCHAR, date VARCHAR);";
+            employeeRecordDB.execSQL(sql);
         }
         catch (Exception e) { Log.d("debug", "Error Creating Database"); }
     }

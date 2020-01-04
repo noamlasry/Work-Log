@@ -8,6 +8,8 @@ import android.util.Log;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 
 public class EmployeeRecord extends AppCompatActivity
 {
@@ -17,6 +19,7 @@ public class EmployeeRecord extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_employee_record);
+
 
         employeeLines = new ArrayList<EmployeeLine>();
         employeeLines.add(new EmployeeLine("24/7/19","8:00","20:00","12"));
