@@ -78,10 +78,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //=============================================================================//
         btn_start = (Button) findViewById(R.id.button);
         btn_stop = (Button) findViewById(R.id.button2);
-        textView = (TextView) findViewById(R.id.textView);
 
-        if(!runtime_permissions())
-            enable_buttons();
+        if(!runtimePermissions())
+            GpsButtons();
 
     }
 
@@ -215,7 +214,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(intent);
 
     }
-    private void enable_buttons()
+    private void GpsButtons()
     {
 
         btn_start.setOnClickListener(new View.OnClickListener() {
@@ -238,7 +237,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     }
 
-    private boolean runtime_permissions()
+    private boolean runtimePermissions()
     {
         if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
 
@@ -256,10 +255,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if(requestCode == 100){
             if( grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED){
-                enable_buttons();
-            }else {
-                runtime_permissions();
-            }
+                GpsButtons();
+            }else { runtimePermissions(); }
         }
     }
 
@@ -267,26 +264,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onResume()
     {
         super.onResume();
-        if(broadcastReceiver == null){
-            broadcastReceiver = new BroadcastReceiver() {
-                @Override
-                public void onReceive(Context context, Intent intent) {
-
-                    textView.append("\n" +intent.getExtras().get("coordinates"));
-
-                }
-            };
-        }
-        registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
     }
 
     @Override
     protected void onDestroy()
     {
         super.onDestroy();
-        if(broadcastReceiver != null)
-            unregisterReceiver(broadcastReceiver);
-//        employeeRecordDB.close();
+        employeeRecordDB.close();
     }
 }
 

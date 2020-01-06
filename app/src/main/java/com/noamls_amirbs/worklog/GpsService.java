@@ -1,6 +1,4 @@
 package com.noamls_amirbs.worklog;
-
-import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -9,20 +7,16 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
-import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
-import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.SystemClock;
 import android.provider.Settings;
 import android.util.Log;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -30,29 +24,28 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
-public class GpsService extends Service {
+public class GpsService extends Service
+{
     //===== for GPS =================//
     private LocationListener listener;
     private LocationManager locationManager;
     //==== for notification =================//
     private NotificationManager notificationManager;
-    private static String CHANNEL_ID = "channel1";
-    private static String CHANNEL_NAME = "Channel 1 Demo";
+    private static String CHANNEL_ID = "channel";
+    private static String CHANNEL_NAME = "Channel Work Log App";
     private static int notificationId = 1;
     boolean activeNotification = true;
 
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
+    //=== have to implement as service aap, dos't do nothing
+    public IBinder onBind(Intent intent) { return null; }
 
     @SuppressLint("MissingPermission")
-    public void onCreate() {
-
+    public void onCreate()
+    {
+        //=== check device version ======//
         setupNotificationChannel();
-
-        listener = new LocationListener() {
+        listener = new LocationListener()
+        {
             @Override
             public void onLocationChanged(Location location) {
                 Intent i = new Intent("location_update");
@@ -76,23 +69,14 @@ public class GpsService extends Service {
                 {
                     Log.d("debug","outside area");
                     activeNotification = true;
-
                 }
 
             }
+            public void onStatusChanged(String s, int i, Bundle bundle) { }
+            public void onProviderEnabled(String s) { }
 
-            @Override
-            public void onStatusChanged(String s, int i, Bundle bundle) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String s) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String s) {
+            public void onProviderDisabled(String s)
+            {
                 Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
@@ -101,28 +85,21 @@ public class GpsService extends Service {
 
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
 
-        //noinspection MissingPermission
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,3000,0,listener);
 
     }
     private void setupNotificationChannel()
     {
-        // 1. Get reference to Notification Manager
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
 
-        // 2. Create Notification Channel ONLY ONEs.
-        //    Need for Android 8.0 (API level 26) and higher.
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
-            Toast.makeText(this, "Notification Channel created!", Toast.LENGTH_LONG).show();
-            //Create channel only if it is not already created
             if (notificationManager.getNotificationChannel(CHANNEL_ID) == null)
             {
                 NotificationChannel notificationChannel = new NotificationChannel(
                         CHANNEL_ID,
                         CHANNEL_NAME,
                         NotificationManager.IMPORTANCE_DEFAULT); // NotificationManager.IMPORTANCE_HIGH
-
                 notificationManager.createNotificationChannel(notificationChannel);
             }
         }
@@ -134,7 +111,7 @@ public class GpsService extends Service {
         Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.work)
+                .setSmallIcon(R.drawable.ic_notifications)
                 .setContentTitle(notificationTitle)
                 .setContentText(notificationText)
                 .setContentIntent(pendingIntent)
@@ -143,18 +120,16 @@ public class GpsService extends Service {
                 .setAutoCancel(true)
                 .build();
 
-        // Send the notification to the device Status bar.
         notificationManager.notify(notificationId, notification);
-
-        notificationId++;  // for multiple(grouping) notifications on the same chanel
+        notificationId++;
     }
 
     @Override
-    public void onDestroy() {
+    public void onDestroy()
+    {
         super.onDestroy();
-        if(locationManager != null){
-            //noinspection MissingPermission
+        if(locationManager != null)
            locationManager.removeUpdates(listener);
-        }
+
     }
 }
