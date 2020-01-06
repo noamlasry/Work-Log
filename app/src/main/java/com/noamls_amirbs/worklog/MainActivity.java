@@ -1,15 +1,17 @@
 package com.noamls_amirbs.worklog;
 
-import androidx.annotation.RequiresApi;
+
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
 
 import android.Manifest;
-import android.content.ContentResolver;
-import android.content.ContentValues;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -30,6 +32,14 @@ import java.util.TimeZone;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
+    //==== gps ==========//
+
+    private Button btn_start, btn_stop;
+    private TextView textView;
+    private BroadcastReceiver broadcastReceiver;
+
+    //==================//
+
     public static final String MY_DB_NAME = "employeeRecord.db";
     private SQLiteDatabase employeeRecordDB = null;
     //===== timer setting ==============================//
@@ -43,7 +53,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    protected void onCreate(Bundle savedInstanceState)
+    {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
@@ -65,6 +76,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         minute = 0;
         hours = 0;
         //=============================================================================//
+        btn_start = (Button) findViewById(R.id.button);
+        btn_stop = (Button) findViewById(R.id.button2);
+        textView = (TextView) findViewById(R.id.textView);
+
+        if(!runtime_permissions())
+            enable_buttons();
 
     }
 
@@ -88,6 +105,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.insert_btn:
+                Toast.makeText(this, "started shift!", Toast.LENGTH_SHORT).show();
                 startTime = SystemClock.uptimeMillis();
                 handler.postDelayed(activeTimer, 0);
                 startTimeShift = getCurrentTime();
@@ -136,14 +154,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String sql = "INSERT INTO employeeRecord (total, exit, inter, date) " +
                 "VALUES ('" + timerCount + "', '" + getCurrentTime() + "', '" + startTimeShift + "', '" + getCurrentDate() + "');";
         employeeRecordDB.execSQL(sql);
-        Toast.makeText(this, "insert!", Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "shift has been register!", Toast.LENGTH_SHORT).show();
     }
 
-    public void onDestroy() {
-
-        super.onDestroy();
-        employeeRecordDB.close();
-    }
 
     public void createDB() {
         try {
@@ -201,6 +214,79 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .putExtra(Intent.EXTRA_EMAIL, "noamlasry02@gmail.com,noamlasry02@gmail.com");
         startActivity(intent);
 
+    }
+    private void enable_buttons()
+    {
+
+        btn_start.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Intent i =new Intent(getApplicationContext(),GpsService.class);
+                startService(i);
+            }
+        });
+
+        btn_stop.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                Intent i = new Intent(getApplicationContext(),GpsService.class);
+                stopService(i);
+
+            }
+        });
+
+    }
+
+    private boolean runtime_permissions()
+    {
+        if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
+
+            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},100);
+
+            return true;
+        }
+        return false;
+    }
+
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
+    {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if(requestCode == 100){
+            if( grantResults[0] == PackageManager.PERMISSION_GRANTED && grantResults[1] == PackageManager.PERMISSION_GRANTED){
+                enable_buttons();
+            }else {
+                runtime_permissions();
+            }
+        }
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
+        if(broadcastReceiver == null){
+            broadcastReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+
+                    textView.append("\n" +intent.getExtras().get("coordinates"));
+
+                }
+            };
+        }
+        registerReceiver(broadcastReceiver,new IntentFilter("location_update"));
+    }
+
+    @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        if(broadcastReceiver != null)
+            unregisterReceiver(broadcastReceiver);
+//        employeeRecordDB.close();
     }
 }
 
