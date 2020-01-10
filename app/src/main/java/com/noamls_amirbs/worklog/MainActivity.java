@@ -6,18 +6,25 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
 import android.Manifest;
+import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.database.sqlite.SQLiteDatabase;
+import android.inputmethodservice.Keyboard;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.CalendarContract;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
@@ -31,15 +38,9 @@ import java.util.TimeZone;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-
-    //==== gps ==========//
-
-    private Button btn_start, btn_stop;
-    private TextView textView;
-    private BroadcastReceiver broadcastReceiver;
-
-    //==================//
-
+    final Context context = this;
+    private Button setGPS, enableGPS;//gps button, to activate and shut down
+    //========= use for sqlite, read and write app data ==========//
     public static final String MY_DB_NAME = "employeeRecord.db";
     private SQLiteDatabase employeeRecordDB = null;
     //===== timer setting ==============================//
@@ -48,40 +49,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     int second, minute, hours, milliscond;
     long milliseconfTime, startTime, TimeBuff, update = 0L;
     String startTimeShift = "----";
-    //=================================================//
+    //==== this button control the employee in, out, and record ================//
     Button insertButton, exitButton, employeeRecordBut;
 
 
-    @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         textTimer = (TextView) findViewById(R.id.textTimer);
         insertButton = (Button) findViewById(R.id.insert_btn);
         exitButton = (Button) findViewById(R.id.exit_btn);
         employeeRecordBut = (Button) findViewById(R.id.employee_record_but);
+        setGPS = (Button) findViewById(R.id.button);
+        enableGPS = (Button) findViewById(R.id.button2);
         exitButton.setOnClickListener(this);
         insertButton.setOnClickListener(this);
         employeeRecordBut.setOnClickListener(this);
         //======= init timer variable ===================================================//
         handler = new Handler();
-        milliseconfTime = 0L;
-        startTime = 0L;
-        TimeBuff = 0L;
-        update = 0L;
-        second = 0;
-        minute = 0;
-        hours = 0;
-        //=============================================================================//
-        btn_start = (Button) findViewById(R.id.button);
-        btn_stop = (Button) findViewById(R.id.button2);
-
+        milliseconfTime = 0L;startTime = 0L;TimeBuff = 0L;update = 0L;second = 0;minute = 0;hours = 0;
+        //== check GPS permission on runtime =============================================//
         if(!runtimePermissions())
             GpsButtons();
+        //=====================================//
 
+        long currentDateTime = System.currentTimeMillis();
+        DateFormat df = new SimpleDateFormat("HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
+        Calendar cal = Calendar.getInstance();
+        cal.setTimeInMillis(currentDateTime);
+        Log.d("debug","TIME:" + df.format(cal.getTime()));
     }
 
     //===== the timer function witch will be activate by INSERT button ================//
@@ -93,19 +92,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             minute = second / 60;
             hours = minute / 60;
             second = second % 60;
-            milliscond = (int) (update % 1000);
+            minute = minute % 60;
+            milliscond = (int) (update % 100);
 
-            textTimer.setText(String.format("%02d:%02d", minute, second));
+            textTimer.setText(String.format("%02d:%02d:%02d",hours, minute, second));
             handler.postDelayed(this, 0);
         }
     };
 
     //===== here is the click control, all the widget that will be clickable will be here ==//
-    public void onClick(View v) {
+    public void onClick(View v)
+    {
         switch (v.getId()) {
             case R.id.insert_btn:
+
                 Toast.makeText(this, "started shift!", Toast.LENGTH_SHORT).show();
-                startTime = SystemClock.uptimeMillis();
+                startTime = SystemClock.uptimeMillis() ;
                 handler.postDelayed(activeTimer, 0);
                 startTimeShift = getCurrentTime();
                 break;
@@ -117,36 +119,40 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.employee_record_but:
+
                 Intent intent = new Intent(MainActivity.this, EmployeeRecord.class);
                 startActivity(intent);
                 break;
-
         }
-
     }
 
     //=== reset the timer once the employee click Exit ==//
-    public void resetTimer() {
-        textTimer.setText("00:00");
+    public void resetTimer()
+    {
+        textTimer.setText("00:00:00");
         handler.removeCallbacks(activeTimer);
     }
-
-    public String getCurrentTime() {
+    //==== return the current time on clock HH:MM =================//
+    public String getCurrentTime()
+    {
         DateFormat now_clock = new SimpleDateFormat("HH:mm");
         now_clock.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
         String curTime = now_clock.format(new Date());
+        Log.d("debug","cur time: "+curTime);
         return curTime;
     }
-
-    public String getCurrentDate() {
+    //=========== return the current date, YYY-MM-DD================//
+    public String getCurrentDate()
+    {
         DateFormat now_date = new SimpleDateFormat("yyyy-MM-dd");
         now_date.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
         String curDate = now_date.format(new Date());
         return curDate;
     }
 
-
-    public void createEvent() {
+    //==== once the employee click EXIT button he will get here and the shift will be save in the dada sqlite ==//
+    public void createEvent()
+    {
         createDB();
         String timerCount = textTimer.getText().toString();
 
@@ -156,7 +162,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Toast.makeText(this, "shift has been register!", Toast.LENGTH_SHORT).show();
     }
 
-
+    //== create data bace at fist, and open it in the other time ==================================//
     public void createDB() {
         try {
             employeeRecordDB = openOrCreateDatabase(MY_DB_NAME, MODE_PRIVATE, null);
@@ -167,7 +173,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-
+    //===== once the employee exit the shift, he can choose ti sigh in the shift on Calendar ===========//
     public void addEventToCalendar()
     {
         DateFormat year = new SimpleDateFormat("yyyy");
@@ -196,7 +202,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         int endHour = Integer.parseInt(arrOfStr[0]);
         int endMinutes = Integer.parseInt(arrOfStr[1]);
 
-        Log.d("debug","date "+arrOfStr[0]+"---"+arrOfStr[1]);
 
         Calendar beginTime = Calendar.getInstance();
         beginTime.set(yearInNum, monthInNum, dayInNum, beginHour, BeginMinutes);
@@ -214,42 +219,44 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivity(intent);
 
     }
+    //===== two buttons here, 1- to set the GPS, 2- enable the GPS ============//
     private void GpsButtons()
     {
-
-        btn_start.setOnClickListener(new View.OnClickListener() {
+        setGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Start service GPS", Toast.LENGTH_SHORT).show();
+
                 Intent i =new Intent(getApplicationContext(),GpsService.class);
                 startService(i);
             }
         });
 
-        btn_stop.setOnClickListener(new View.OnClickListener() {
+        enableGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                Toast.makeText(getApplicationContext(), "Stop service GPS", Toast.LENGTH_SHORT).show();
 
                 Intent i = new Intent(getApplicationContext(),GpsService.class);
                 stopService(i);
-
             }
         });
 
-    }
 
+
+
+    }
+    //====== getting permission on runtime ====================================//
     private boolean runtimePermissions()
     {
         if(Build.VERSION.SDK_INT >= 23 && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED){
-
             requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},100);
-
             return true;
         }
         return false;
     }
 
 
-    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -260,17 +267,81 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
     protected void onResume()
     {
         super.onResume();
+        boolean wasInsert = false;
+        SharedPreferences sp =
+                getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        wasInsert = sp.getBoolean("isActive",true);
+
+        Log.d("debug","wasInsert: "+wasInsert);
+
+
     }
 
-    @Override
     protected void onDestroy()
     {
         super.onDestroy();
-        employeeRecordDB.close();
+//        employeeRecordDB.close();
+    }
+    public boolean onCreateOptionsMenu(Menu menu)
+    {
+        super.onCreateOptionsMenu(menu);
+        MenuItem menuItem1 = menu.add("Setting");
+        MenuItem menuItem2 = menu.add("Exit");
+
+        menuItem1.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener()
+        {
+            public boolean onMenuItemClick(MenuItem item)
+            {
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                        context);
+
+                alertDialogBuilder.setTitle("Work Log Setting");// set title
+                Intent i = new Intent(android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:" + BuildConfig.APPLICATION_ID));
+                startActivity(i);
+
+
+                // create alert dialog
+                AlertDialog alertDialog = alertDialogBuilder.create();
+
+                // show it
+                alertDialog.show();
+                return true;
+            }
+        });
+        menuItem2.setOnMenuItemClickListener(new MenuItem.OnMenuItemClickListener()
+        {
+            public boolean onMenuItemClick(MenuItem item)
+            {
+                AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                        context);
+
+                alertDialogBuilder.setTitle("Exit Work log");// set title
+
+                // set dialog message
+                alertDialogBuilder
+                        .setMessage("Do you really want to exit the app?")
+                        .setCancelable(false)
+                        .setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id)
+                            {
+                               // MainActivity.this.finish();
+                              //  android.os.Process.killProcess(android.os.Process.myPid());
+                                finish();
+                            }
+                        })
+                        .setNegativeButton("No",new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog,int id) { dialog.cancel(); }
+                        });
+                AlertDialog alertDialog = alertDialogBuilder.create();
+
+                alertDialog.show();
+                return true;
+            }
+        });
+        return true;
     }
 }
 

@@ -74,21 +74,31 @@
             android:layout_height="wrap_content">
         </TextView>
         <TextView
+            android:id="@+id/hours_txt"
             android:text=""
-            android:textSize="80px"
+            android:textSize="60px"
             android:textColor="@android:color/black"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
         </TextView>
 
         <TextView
-            android:layout_marginLeft="400px"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="210px"
             android:text="reports:"
-            android:textSize="80px"
+            android:textColor="@android:color/black"
+            android:textSize="80px">
+
+        </TextView>
+
+        <TextView
+            android:id="@+id/report_txt"
+            android:text=""
+            android:textSize="60px"
             android:textColor="@android:color/black"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
-
         </TextView>
 
 

@@ -27,9 +27,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginLeft="60px"
-        android:text="Noam Lasy and Amir besig"
+        android:text="Noam Lasry and Amir besig"
         android:textColor="@android:color/holo_blue_light"
-        android:textSize="30dp" />
+        android:textSize="27dp" />
 
     <TextView
         android:layout_width="wrap_content"

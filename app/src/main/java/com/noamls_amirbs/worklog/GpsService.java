@@ -24,6 +24,9 @@ import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+
 public class GpsService extends Service
 {
     //===== for GPS =================//
@@ -47,23 +50,22 @@ public class GpsService extends Service
         listener = new LocationListener()
         {
             @Override
-            public void onLocationChanged(Location location) {
-                Intent i = new Intent("location_update");
+            public void onLocationChanged(Location location)
+            {
+                double latitude = round(location.getLatitude(),4);
+                double longitude = round(location.getLongitude(),4);
 
-                i.putExtra("coordinates",location.getLongitude()+" "+location.getLatitude());
-                sendBroadcast(i);
-
-                if(location.getLatitude() > 31.25 && location.getLatitude() < 31.3)
+                Log.d("debug","location :"+location.getLatitude()+" "+location.getLongitude());
+                // Karme Tzure location
+                if(latitude == 31.6089  && longitude == 35.0988)
                 {
                     if(activeNotification)
                     {
                         Log.d("debug","in area");
                         showNotification("Notification Message", "you get your work, click me to sigh in");
-
                         Toast.makeText(getApplicationContext(),"in area",Toast.LENGTH_SHORT).show();
                         activeNotification = false;
                     }
-
                 }
                 else
                 {
@@ -71,27 +73,30 @@ public class GpsService extends Service
                     activeNotification = true;
                 }
 
+
             }
+            //==== have to implement, not in use =======================//
             public void onStatusChanged(String s, int i, Bundle bundle) { }
             public void onProviderEnabled(String s) { }
-
+            //==========================================================//
+            //=== use to set up GPS component =========================//
             public void onProviderDisabled(String s)
             {
                 Intent i = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
                 i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                 startActivity(i);
             }
+            //===========================================================//
         };
 
         locationManager = (LocationManager) getApplicationContext().getSystemService(Context.LOCATION_SERVICE);
-
         locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER,3000,0,listener);
 
     }
+    //=========== use to set ou notification once the employee near his work spot ============================//
     private void setupNotificationChannel()
     {
         notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
         {
             if (notificationManager.getNotificationChannel(CHANNEL_ID) == null)
@@ -104,6 +109,7 @@ public class GpsService extends Service
             }
         }
     }
+    //============= display the notification =======================================//
     public void showNotification(String notificationTitle, String notificationText)
     {
         Intent intent = new Intent(this, MainActivity.class);
@@ -124,12 +130,18 @@ public class GpsService extends Service
         notificationId++;
     }
 
-    @Override
     public void onDestroy()
     {
         super.onDestroy();
-        if(locationManager != null)
-           locationManager.removeUpdates(listener);
+     //   if(locationManager != null)
+      //     locationManager.removeUpdates(listener);
 
+    }
+    private static double round(double value, int places) {
+        if (places < 0) throw new IllegalArgumentException();
+
+        BigDecimal bd = new BigDecimal(Double.toString(value));
+        bd = bd.setScale(places, RoundingMode.HALF_UP);
+        return bd.doubleValue();
     }
 }
