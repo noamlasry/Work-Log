@@ -47,10 +47,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Handler handler;
     private TextView textTimer;
     int second, minute, hours, milliscond;
-    long milliseconfTime, startTime, TimeBuff, update = 0L;
+    long milliseconfTime, startTime, TimeBuff, update = 0L,startTimeShiftInMilli;
     String startTimeShift = "----";
     //==== this button control the employee in, out, and record ================//
     Button insertButton, exitButton, employeeRecordBut;
+
 
 
     protected void onCreate(Bundle savedInstanceState)
@@ -66,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         enableGPS = (Button) findViewById(R.id.button2);
         exitButton.setOnClickListener(this);
         insertButton.setOnClickListener(this);
+
         employeeRecordBut.setOnClickListener(this);
         //======= init timer variable ===================================================//
         handler = new Handler();
@@ -74,13 +76,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if(!runtimePermissions())
             GpsButtons();
         //=====================================//
+        SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putBoolean("inArea", false);
+        editor.commit();
+        handler.postDelayed(setAndUnSetButton, 0);
+        SharedPreferences sp2 = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        boolean enableEnter = sp2.getBoolean("enableEnter",false);
+        boolean enableExit = sp2.getBoolean("enableExit",false);
 
-        long currentDateTime = System.currentTimeMillis();
-        DateFormat df = new SimpleDateFormat("HH:mm:ss");
-        df.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(currentDateTime);
-        Log.d("debug","TIME:" + df.format(cal.getTime()));
+     //   insertButton.setEnabled(enableEnter);
+    //    exitButton.setEnabled(enableExit);
+
+
+
+
     }
 
     //===== the timer function witch will be activate by INSERT button ================//
@@ -99,23 +109,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             handler.postDelayed(this, 0);
         }
     };
+    private Runnable setAndUnSetButton = new Runnable() {
+        public void run() {
+            SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
+            boolean inArea = sp.getBoolean("inArea",false);
+            Log.d("debug","inArea: "+inArea);
+          //  insertButton.setEnabled(inArea);
+            handler.postDelayed(this, 0);
+        }
+    };
 
     //===== here is the click control, all the widget that will be clickable will be here ==//
     public void onClick(View v)
     {
+        SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
         switch (v.getId()) {
             case R.id.insert_btn:
-
-                Toast.makeText(this, "started shift!", Toast.LENGTH_SHORT).show();
-                startTime = SystemClock.uptimeMillis() ;
-                handler.postDelayed(activeTimer, 0);
-                startTimeShift = getCurrentTime();
+                activateTimer();
+                lastBeginTime();
+                editor.putBoolean("enableExit",true);
+                editor.putBoolean("enableEnter",false);
+                editor.commit();
+                exitButton.setEnabled(true);
                 break;
 
             case R.id.exit_btn:
                 createEvent();
                 resetTimer();
                 addEventToCalendar();
+                editor.putString("beginTime",null);
+                editor.commit();
                 break;
 
             case R.id.employee_record_but:
@@ -125,7 +149,54 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
         }
     }
+    public void activateTimer()
+    {
+        Toast.makeText(this, "started shift!", Toast.LENGTH_SHORT).show();
+        startTime = SystemClock.uptimeMillis();
+        handler.postDelayed(activeTimer, 0);
+        startTimeShift = getCurrentTime();
+    }
 
+    public void lastBeginTime()
+    {
+        SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putLong("beginTimeInMilli", System.currentTimeMillis());
+        editor.putString("beginTime",startTimeShift);
+        editor.commit();
+        Log.d("debug","beginTime: "+System.currentTimeMillis());
+    }
+    protected void onResume()
+    {
+        super.onResume();
+        SharedPreferences sp =
+                getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        long beginTimeInMilli = sp.getLong("beginTimeInMilli",-1);
+        String beginTime = sp.getString("beginTime",null);
+        Intent intent = getIntent();
+        int sign = intent.getIntExtra("sign",-1);
+        Log.d("debug","sign: "+sign);
+
+        if(sign == 10 && beginTime != null)
+        {
+            long timerDiff = System.currentTimeMillis() - beginTimeInMilli;
+            startTime = SystemClock.uptimeMillis() - timerDiff;
+            handler.postDelayed(activeTimer, 0);
+            startTimeShift = sp.getString("beginTime",null);
+        }
+        boolean wasDestroy = sp.getBoolean("wasDestroy",false);
+        if(wasDestroy && beginTime!= null)
+        {
+            long timerDiff = System.currentTimeMillis() - beginTimeInMilli;
+            startTime = SystemClock.uptimeMillis() - timerDiff;
+            handler.postDelayed(activeTimer, 0);
+            startTimeShift = sp.getString("beginTime",null);
+        }
+
+
+
+
+    }
     //=== reset the timer once the employee click Exit ==//
     public void resetTimer()
     {
@@ -192,6 +263,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         String curDay = day.format(new Date());
         int dayInNum = Integer.parseInt(curDay);
 
+
         String startTime = startTimeShift;
         String[] arrOfStr = startTime.split(":", 2);
         int beginHour = Integer.parseInt(arrOfStr[0]);
@@ -222,6 +294,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //===== two buttons here, 1- to set the GPS, 2- enable the GPS ============//
     private void GpsButtons()
     {
+
         setGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -229,8 +302,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Intent i =new Intent(getApplicationContext(),GpsService.class);
                 startService(i);
+
             }
         });
+
+
 
         enableGPS.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -239,6 +315,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
                 Intent i = new Intent(getApplicationContext(),GpsService.class);
                 stopService(i);
+                insertButton.setEnabled(false);
             }
         });
 
@@ -267,23 +344,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    protected void onResume()
-    {
-        super.onResume();
-        boolean wasInsert = false;
-        SharedPreferences sp =
-                getSharedPreferences("MyPref", Context.MODE_PRIVATE);
-        wasInsert = sp.getBoolean("isActive",true);
 
-        Log.d("debug","wasInsert: "+wasInsert);
-
-
-    }
 
     protected void onDestroy()
     {
         super.onDestroy();
 //        employeeRecordDB.close();
+        SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sp.edit();
+        editor.putBoolean("wasDestroy", true);
+        editor.commit();
     }
     public boolean onCreateOptionsMenu(Menu menu)
     {

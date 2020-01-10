@@ -124,6 +124,7 @@ public class EmployeeRecord extends AppCompatActivity
     public void onBackPressed()
     {
         Intent intent=new Intent(this,MainActivity.class);
+        intent.putExtra("sign",10);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
 

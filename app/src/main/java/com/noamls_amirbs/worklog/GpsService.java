@@ -7,6 +7,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -17,6 +18,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.provider.Settings;
 import android.util.Log;
+import android.widget.Button;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
@@ -39,6 +41,7 @@ public class GpsService extends Service
     private static int notificationId = 1;
     boolean activeNotification = true;
 
+
     //=== have to implement as service aap, dos't do nothing
     public IBinder onBind(Intent intent) { return null; }
 
@@ -47,6 +50,7 @@ public class GpsService extends Service
     {
         //=== check device version ======//
         setupNotificationChannel();
+        final MainActivity mainActivity = new MainActivity();
         listener = new LocationListener()
         {
             @Override
@@ -54,21 +58,29 @@ public class GpsService extends Service
             {
                 double latitude = round(location.getLatitude(),4);
                 double longitude = round(location.getLongitude(),4);
+                SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
 
                 Log.d("debug","location :"+location.getLatitude()+" "+location.getLongitude());
                 // Karme Tzure location
                 if(latitude == 31.6089  && longitude == 35.0988)
                 {
+
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putBoolean("inArea", true);
+                    editor.commit();
                     if(activeNotification)
                     {
                         Log.d("debug","in area");
-                        showNotification("Notification Message", "you get your work, click me to sigh in");
+                        showNotification("Notification Message", "you get your work, click me to sign in");
                         Toast.makeText(getApplicationContext(),"in area",Toast.LENGTH_SHORT).show();
                         activeNotification = false;
                     }
                 }
                 else
                 {
+                    SharedPreferences.Editor editor = sp.edit();
+                    editor.putBoolean("inArea", false);
+                    editor.commit();
                     Log.d("debug","outside area");
                     activeNotification = true;
                 }
