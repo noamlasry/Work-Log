@@ -2,11 +2,16 @@ package com.noamls_amirbs.worklog;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -17,15 +22,20 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
+import java.util.Vector;
 
 public class EmployeeRecord extends AppCompatActivity
 {
     public static final String MY_DB_NAME = "employeeRecord.db";
+    public static final String MY_DB_NAME_2 = "employeeRecord";
+    private static final String ID = "id";
     private SQLiteDatabase employeeRecordDB = null;
     private ArrayList<EmployeeLine> employeeLines;
     TextView reportTxt,hoursTxt;
     int report = 0,hours,minutes,seconds;
     long hoursInMillisecond = 0,minutesInMilliseconds = 0,secondsInMilliseconds = 0l,update;
+    Vector<String> vector = new Vector();
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState)
@@ -38,6 +48,7 @@ public class EmployeeRecord extends AppCompatActivity
 
         createDB();
         employeeLines = new ArrayList<EmployeeLine>();
+
 
         String sql = "SELECT * FROM employeeRecord";
         Cursor cursor = employeeRecordDB.rawQuery(sql, null);
@@ -59,6 +70,8 @@ public class EmployeeRecord extends AppCompatActivity
                 String inter = cursor.getString(interColumn);
                 String date = cursor.getString(dateColumn);
 
+                vector.addElement(id);
+
 
                 calculateHours(total);
                 EmployeeLine employeeLine = new EmployeeLine(total,exit,inter,date);
@@ -77,8 +90,62 @@ public class EmployeeRecord extends AppCompatActivity
         listView.setAdapter(scheduleList);
         String str = String.valueOf(report);
         reportTxt.setText(str);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                removeItem(position);
+
+            }
+        });
+
+
     }
 
+    public void deleteName(int position)
+    {
+        String id_to_delete = vector.get(position);
+        String query = "DELETE FROM " + MY_DB_NAME_2 + " WHERE "
+                + ID + " = '" + id_to_delete + "'";
+
+        vector.remove(position);
+        employeeRecordDB.execSQL(query);
+    }
+
+    private void removeItem(final int position)
+    {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("Remove Item");
+        builder.setMessage("Do you really want to remove it ?");
+        builder.setPositiveButton("YES", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                employeeLines.remove(position);
+                ScheduleList scheduleList = new ScheduleList(EmployeeRecord.this, employeeLines);
+                ListView listView = findViewById(R.id.ListView1ID);
+                listView.setAdapter(scheduleList);
+                deleteName(position);
+                report--;
+                String str = String.valueOf(report);
+                reportTxt.setText(str);
+
+                Toast.makeText(EmployeeRecord.this, "Item REMOVED!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        builder.setNegativeButton("NO", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                Toast.makeText(EmployeeRecord.this, "Item NOT removed!", Toast.LENGTH_LONG).show();
+            }
+        });
+
+        builder.show();
+    }
     public void calculateHours(String total)
     {
         String[] parts = total.split(":");

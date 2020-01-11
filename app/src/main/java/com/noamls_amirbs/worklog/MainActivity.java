@@ -51,7 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String startTimeShift = "----";
     //==== this button control the employee in, out, and record ================//
     Button insertButton, exitButton, employeeRecordBut,deleteRecord;
-    boolean wasInsert,setGPSbutton ,p;
+    boolean wasInsert,setGPSbutton ,in_area;
 
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -78,17 +78,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             GpsButtons();
         //======== set back Preff to defult ==================================================//
         SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
-      //  SharedPreferences.Editor editor = sp.edit();
-      //  editor.putBoolean("inArea", false);
-      //  editor.commit();
-         p = sp.getBoolean("inArea", true);
-        Toast.makeText(MainActivity.this, "p: "+p, Toast.LENGTH_SHORT).show();
-
-        insertButton.setEnabled(p);
+        in_area = sp.getBoolean("inArea", true);
+        insertButton.setEnabled(in_area);
         //===== use this thread to enable and unanable the inter and exit button==============//
-
         handler.postDelayed(setAndUnSetButton, 0);
-
 
     }
 
@@ -116,7 +109,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
             boolean inArea = sp.getBoolean("inArea",false);
             wasInsert = sp.getBoolean("wasInsert",false);
-        //    Log.d("debug","inArea: "+inArea);
+
 
             //=== check:
             // 1 - if we are in the correct area
@@ -124,10 +117,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             // 3 - if set GPS button was clicked
 
             setGPSbutton = sp.getBoolean("set_GPS_button",false);
-            Log.d("debug","inArea: "+inArea+" wasInsert: "+wasInsert+" setGPSbutton: "+setGPSbutton);
+            // in case the employee wasn't sign in yet he in the current area
             if(inArea && !wasInsert && setGPSbutton)// make the insert button become available
                 insertButton.setEnabled(true);
-            else if(wasInsert || !inArea)// if i'm not in the area or i was not sign in
+            else if(wasInsert || !inArea)// in case the employee isn't in the area and he wasn't sign in
                 insertButton.setEnabled(false);
             exitButton.setEnabled(wasInsert);// if i was sign in, enable the exit button
             //==== i use this thread to listen the buttons status change ======//
@@ -154,11 +147,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 resetTimer();
                 addEventToCalendar();
                 editor.putString("beginTime",null);
-                editor.putBoolean("wasInsert", false);//indicate that now we can click agin on the insert button
+                editor.putBoolean("wasInsert", false);//indicate that now we can click again on the insert button
                 editor.commit();
-                if(p)// if
+                if(in_area)// if the employee in the area. now that he click Exit enable back the insert button
                     insertButton.setEnabled(true);
-
                 break;
 
             case R.id.employee_record_but:
