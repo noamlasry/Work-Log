@@ -83,7 +83,6 @@ public class GpsService extends Service
                     activeNotification = true;
                 }
 
-
             }
             //==== have to implement, not in use =======================//
             public void onStatusChanged(String s, int i, Bundle bundle) { }

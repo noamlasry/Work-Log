@@ -50,8 +50,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     long milliseconfTime, startTime, TimeBuff, update = 0L,startTimeShiftInMilli;
     String startTimeShift = "----";
     //==== this button control the employee in, out, and record ================//
-    Button insertButton, exitButton, employeeRecordBut;
-    boolean wasInsert,setGPSbutton = false;
+    Button insertButton, exitButton, employeeRecordBut,deleteRecord;
+    boolean wasInsert,setGPSbutton ,p;
 
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -64,8 +64,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         employeeRecordBut = (Button) findViewById(R.id.employee_record_but);
         setGPS = (Button) findViewById(R.id.button);
         enableGPS = (Button) findViewById(R.id.button2);
+        deleteRecord = (Button)findViewById(R.id.delete_record);
         exitButton.setOnClickListener(this);
         insertButton.setOnClickListener(this);
+        deleteRecord.setOnClickListener(this);
 
         employeeRecordBut.setOnClickListener(this);
         //======= init timer variable ===================================================//
@@ -76,11 +78,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             GpsButtons();
         //======== set back Preff to defult ==================================================//
         SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
-        SharedPreferences.Editor editor = sp.edit();
-        editor.putBoolean("inArea", false);
-        editor.commit();
-        boolean p = sp.getBoolean("inArea", true);
-        Log.d("debug","p: "+p);
+      //  SharedPreferences.Editor editor = sp.edit();
+      //  editor.putBoolean("inArea", false);
+      //  editor.commit();
+         p = sp.getBoolean("inArea", true);
+        Toast.makeText(MainActivity.this, "p: "+p, Toast.LENGTH_SHORT).show();
+
+        insertButton.setEnabled(p);
         //===== use this thread to enable and unanable the inter and exit button==============//
 
         handler.postDelayed(setAndUnSetButton, 0);
@@ -112,12 +116,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
             boolean inArea = sp.getBoolean("inArea",false);
             wasInsert = sp.getBoolean("wasInsert",false);
-            Log.d("debug","inArea: "+inArea);
+        //    Log.d("debug","inArea: "+inArea);
 
             //=== check:
             // 1 - if we are in the correct area
             // 2 - if the employee was check in
             // 3 - if set GPS button was clicked
+
+            setGPSbutton = sp.getBoolean("set_GPS_button",false);
+            Log.d("debug","inArea: "+inArea+" wasInsert: "+wasInsert+" setGPSbutton: "+setGPSbutton);
             if(inArea && !wasInsert && setGPSbutton)// make the insert button become available
                 insertButton.setEnabled(true);
             else if(wasInsert || !inArea)// if i'm not in the area or i was not sign in
@@ -149,6 +156,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 editor.putString("beginTime",null);
                 editor.putBoolean("wasInsert", false);//indicate that now we can click agin on the insert button
                 editor.commit();
+                if(p)// if
+                    insertButton.setEnabled(true);
+
                 break;
 
             case R.id.employee_record_but:
@@ -156,7 +166,36 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 Intent intent = new Intent(MainActivity.this, EmployeeRecord.class);
                 startActivity(intent);
                 break;
+            case R.id.delete_record:
+                deleteRecordData();
+                break;
         }
+    }
+    public void deleteRecordData()
+    {
+        AlertDialog.Builder alertDialogBuilder = new AlertDialog.Builder(
+                context);
+
+        alertDialogBuilder.setTitle("Delete Record");// set title
+
+        // set dialog message
+        alertDialogBuilder
+                .setMessage("Do you really want to delete all?")
+                .setCancelable(false)
+                .setPositiveButton("Yes",new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,int id)
+                    {
+                        Toast.makeText(MainActivity.this, "All employee record has deleted", Toast.LENGTH_SHORT).show();
+                        deleteDatabase(MY_DB_NAME);
+                    }
+                })
+                .setNegativeButton("No",new DialogInterface.OnClickListener() {
+                    public void onClick(DialogInterface dialog,int id) { dialog.cancel(); }
+                });
+        AlertDialog alertDialog = alertDialogBuilder.create();
+
+        alertDialog.show();
+
     }
     public void activateTimer()
     {
@@ -302,7 +341,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         setGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setGPSbutton = true;
+                SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean("set_GPS_button",true);
+                editor.commit();
                 Toast.makeText(getApplicationContext(), "Start service GPS", Toast.LENGTH_SHORT).show();
                 Intent i =new Intent(getApplicationContext(),GpsService.class);startService(i);
 
@@ -311,11 +353,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         enableGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                setGPSbutton = false;
                 insertButton.setEnabled(false);
                 SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 editor.putBoolean("inArea", false);//indicate that insert button was clicked
+                editor.putBoolean("set_GPS_button",false);
                 editor.commit();
                 Toast.makeText(getApplicationContext(), "Stop service GPS", Toast.LENGTH_SHORT).show();
                 Intent i = new Intent(getApplicationContext(),GpsService.class);
