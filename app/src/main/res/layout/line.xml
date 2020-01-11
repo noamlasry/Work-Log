@@ -30,7 +30,7 @@
             android:layout_marginTop="300px"
             android:text="begin"
             android:textColor="#000"
-            android:textSize="20sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
         <TextView
@@ -41,20 +41,20 @@
             android:layout_marginTop="300px"
             android:text="end"
             android:textColor="#000"
-            android:textSize="20sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
 
         <TextView
-            android:layout_marginLeft="20px"
             android:id="@+id/total_txt"
-            android:layout_width="98dp"
+            android:layout_width="79dp"
             android:layout_height="wrap_content"
             android:layout_margin="5dp"
+            android:layout_marginLeft="20px"
             android:layout_marginTop="300px"
             android:text="total"
             android:textColor="#000"
-            android:textSize="20sp"
+            android:textSize="15sp"
             android:textStyle="bold" />
 
 

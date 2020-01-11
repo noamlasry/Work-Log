@@ -51,8 +51,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     String startTimeShift = "----";
     //==== this button control the employee in, out, and record ================//
     Button insertButton, exitButton, employeeRecordBut;
-
-
+    boolean wasInsert,setGPSbutton = false;
 
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -75,20 +74,16 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         //== check GPS permission on runtime =============================================//
         if(!runtimePermissions())
             GpsButtons();
-        //=====================================//
-        SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
+        //======== set back Preff to defult ==================================================//
+        SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.putBoolean("inArea", false);
         editor.commit();
+        boolean p = sp.getBoolean("inArea", true);
+        Log.d("debug","p: "+p);
+        //===== use this thread to enable and unanable the inter and exit button==============//
+
         handler.postDelayed(setAndUnSetButton, 0);
-        SharedPreferences sp2 = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
-        boolean enableEnter = sp2.getBoolean("enableEnter",false);
-        boolean enableExit = sp2.getBoolean("enableExit",false);
-
-     //   insertButton.setEnabled(enableEnter);
-    //    exitButton.setEnabled(enableExit);
-
-
 
 
     }
@@ -106,15 +101,29 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             milliscond = (int) (update % 100);
 
             textTimer.setText(String.format("%02d:%02d:%02d",hours, minute, second));
+
             handler.postDelayed(this, 0);
         }
     };
     private Runnable setAndUnSetButton = new Runnable() {
-        public void run() {
-            SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
+        public void run()
+        {
+            //======= check in loop if the GPS on the current area ==================================//
+            SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
             boolean inArea = sp.getBoolean("inArea",false);
+            wasInsert = sp.getBoolean("wasInsert",false);
             Log.d("debug","inArea: "+inArea);
-          //  insertButton.setEnabled(inArea);
+
+            //=== check:
+            // 1 - if we are in the correct area
+            // 2 - if the employee was check in
+            // 3 - if set GPS button was clicked
+            if(inArea && !wasInsert && setGPSbutton)// make the insert button become available
+                insertButton.setEnabled(true);
+            else if(wasInsert || !inArea)// if i'm not in the area or i was not sign in
+                insertButton.setEnabled(false);
+            exitButton.setEnabled(wasInsert);// if i was sign in, enable the exit button
+            //==== i use this thread to listen the buttons status change ======//
             handler.postDelayed(this, 0);
         }
     };
@@ -128,10 +137,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             case R.id.insert_btn:
                 activateTimer();
                 lastBeginTime();
-                editor.putBoolean("enableExit",true);
-                editor.putBoolean("enableEnter",false);
+                insertButton.setEnabled(false);
+                editor.putBoolean("wasInsert", true);//indicate that insert button was clicked
                 editor.commit();
-                exitButton.setEnabled(true);
                 break;
 
             case R.id.exit_btn:
@@ -139,6 +147,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 resetTimer();
                 addEventToCalendar();
                 editor.putString("beginTime",null);
+                editor.putBoolean("wasInsert", false);//indicate that now we can click agin on the insert button
                 editor.commit();
                 break;
 
@@ -164,26 +173,26 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         editor.putLong("beginTimeInMilli", System.currentTimeMillis());
         editor.putString("beginTime",startTimeShift);
         editor.commit();
-        Log.d("debug","beginTime: "+System.currentTimeMillis());
     }
     protected void onResume()
     {
         super.onResume();
-        SharedPreferences sp =
-                getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+        SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
         long beginTimeInMilli = sp.getLong("beginTimeInMilli",-1);
         String beginTime = sp.getString("beginTime",null);
+        //=== use this intent flag to know if i get back from 'employeeRecord'
         Intent intent = getIntent();
         int sign = intent.getIntExtra("sign",-1);
-        Log.d("debug","sign: "+sign);
 
-        if(sign == 10 && beginTime != null)
+        if(sign == 10 && beginTime != null)// that mean that i back from 'employeeRecord' and i sign in
         {
             long timerDiff = System.currentTimeMillis() - beginTimeInMilli;
             startTime = SystemClock.uptimeMillis() - timerDiff;
             handler.postDelayed(activeTimer, 0);
             startTimeShift = sp.getString("beginTime",null);
         }
+        //===== check if i was in onDestroy and i start the shift,
+        //===== by that i can active back the timer after coming back from onDestroy
         boolean wasDestroy = sp.getBoolean("wasDestroy",false);
         if(wasDestroy && beginTime!= null)
         {
@@ -192,9 +201,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             handler.postDelayed(activeTimer, 0);
             startTimeShift = sp.getString("beginTime",null);
         }
-
-
-
 
     }
     //=== reset the timer once the employee click Exit ==//
@@ -209,7 +215,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         DateFormat now_clock = new SimpleDateFormat("HH:mm");
         now_clock.setTimeZone(TimeZone.getTimeZone("Asia/Jerusalem"));
         String curTime = now_clock.format(new Date());
-        Log.d("debug","cur time: "+curTime);
         return curTime;
     }
     //=========== return the current date, YYY-MM-DD================//
@@ -294,34 +299,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     //===== two buttons here, 1- to set the GPS, 2- enable the GPS ============//
     private void GpsButtons()
     {
-
         setGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                setGPSbutton = true;
                 Toast.makeText(getApplicationContext(), "Start service GPS", Toast.LENGTH_SHORT).show();
-
-                Intent i =new Intent(getApplicationContext(),GpsService.class);
-                startService(i);
+                Intent i =new Intent(getApplicationContext(),GpsService.class);startService(i);
 
             }
         });
-
-
-
         enableGPS.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                setGPSbutton = false;
+                insertButton.setEnabled(false);
+                SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
+                editor.putBoolean("inArea", false);//indicate that insert button was clicked
+                editor.commit();
                 Toast.makeText(getApplicationContext(), "Stop service GPS", Toast.LENGTH_SHORT).show();
-
                 Intent i = new Intent(getApplicationContext(),GpsService.class);
                 stopService(i);
-                insertButton.setEnabled(false);
+
             }
         });
-
-
-
-
     }
     //====== getting permission on runtime ====================================//
     private boolean runtimePermissions()
@@ -333,7 +334,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         return false;
     }
 
-
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -343,8 +343,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }else { runtimePermissions(); }
         }
     }
-
-
 
     protected void onDestroy()
     {

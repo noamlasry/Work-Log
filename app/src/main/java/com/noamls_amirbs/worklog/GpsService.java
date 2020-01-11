@@ -48,6 +48,7 @@ public class GpsService extends Service
     @SuppressLint("MissingPermission")
     public void onCreate()
     {
+
         //=== check device version ======//
         setupNotificationChannel();
         final MainActivity mainActivity = new MainActivity();
@@ -56,29 +57,26 @@ public class GpsService extends Service
             @Override
             public void onLocationChanged(Location location)
             {
+                SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
+                SharedPreferences.Editor editor = sp.edit();
                 double latitude = round(location.getLatitude(),4);
                 double longitude = round(location.getLongitude(),4);
-                SharedPreferences sp = getSharedPreferences("GPSPreff", Context.MODE_PRIVATE);
+                //====== use sharedPreferences to save GPS button enable setting ====================//
 
                 Log.d("debug","location :"+location.getLatitude()+" "+location.getLongitude());
                 // Karme Tzure location
-                if(latitude == 31.6089  && longitude == 35.0988)
+                if(latitude > 31.6070 && latitude < 31.6080  && longitude > 35.0980 && longitude < 35.0990)
                 {
-
-                    SharedPreferences.Editor editor = sp.edit();
                     editor.putBoolean("inArea", true);
                     editor.commit();
                     if(activeNotification)
                     {
-                        Log.d("debug","in area");
                         showNotification("Notification Message", "you get your work, click me to sign in");
-                        Toast.makeText(getApplicationContext(),"in area",Toast.LENGTH_SHORT).show();
                         activeNotification = false;
                     }
                 }
                 else
                 {
-                    SharedPreferences.Editor editor = sp.edit();
                     editor.putBoolean("inArea", false);
                     editor.commit();
                     Log.d("debug","outside area");

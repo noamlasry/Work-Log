@@ -13,7 +13,7 @@
         android:layout_height="314dp"
         android:layout_marginLeft="180px"
         android:layout_marginTop="300px"
-        android:src="@drawable/work_log_icon" />
+        android:src="@drawable/wwwww" />
 
     <TextView
         android:layout_width="wrap_content"

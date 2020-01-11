@@ -100,8 +100,6 @@ public class EmployeeRecord extends AppCompatActivity
 
 
 
-
-
     }
     public long getHoursInMilliseconds(int hours)
     {
