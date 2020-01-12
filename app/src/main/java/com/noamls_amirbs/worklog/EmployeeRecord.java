@@ -46,33 +46,39 @@ public class EmployeeRecord extends AppCompatActivity
         reportTxt = (TextView)findViewById(R.id.report_txt);
         hoursTxt = (TextView)findViewById(R.id.hours_txt);
 
-        createDB();
-        employeeLines = new ArrayList<EmployeeLine>();
+        createDataList();
+        ScheduleList scheduleList = new ScheduleList(this, employeeLines);
+        ListView listView = findViewById(R.id.ListView1ID);
+        listView.setAdapter(scheduleList);
+        //===== one short click on sigle row on the list, and the user can remove the current item ====//
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) { removeItem(position);
+            }
+        });
 
+    }
+    public void createDataList()
+    {
+        createDB();// create database, if exist just open it
+        employeeLines = new ArrayList<EmployeeLine>();// hold the Employee list object
 
+        //=== going through the data and display it in list object =========================================================//
         String sql = "SELECT * FROM employeeRecord";
         Cursor cursor = employeeRecordDB.rawQuery(sql, null);
-
-
-        int idColumn = cursor.getColumnIndex("id");
-        int totalColumn = cursor.getColumnIndex("total");
-        int exitColumn = cursor.getColumnIndex("exit");
-        int interColumn = cursor.getColumnIndex("inter");
+        int idColumn = cursor.getColumnIndex("id");int totalColumn = cursor.getColumnIndex("total");
+        int exitColumn = cursor.getColumnIndex("exit");int interColumn = cursor.getColumnIndex("inter");
         int dateColumn = cursor.getColumnIndex("date");
 
         if (cursor.moveToFirst())
         {
             do {
                 report++;
-                String id = cursor.getString(idColumn);
-                String total = cursor.getString(totalColumn);
-                String exit = cursor.getString(exitColumn);
-                String inter = cursor.getString(interColumn);
+                String id = cursor.getString(idColumn); String total = cursor.getString(totalColumn);
+                String exit = cursor.getString(exitColumn); String inter = cursor.getString(interColumn);
                 String date = cursor.getString(dateColumn);
 
                 vector.addElement(id);
-
-
                 calculateHours(total);
                 EmployeeLine employeeLine = new EmployeeLine(total,exit,inter,date);
 
@@ -82,32 +88,19 @@ public class EmployeeRecord extends AppCompatActivity
 
         } else { Toast.makeText(this, "No Results to Show", Toast.LENGTH_SHORT).show(); }
 
-        hoursTxt.setText(String.format("%02d:%02d:%02d",hours, minutes, seconds));
+        hoursTxt.setText(String.format("%02d:%02d:%02d",hours, minutes, seconds));// display the total hours
+        String str = String.valueOf(report); reportTxt.setText(str);// display num of report
+        //==== create list and display it ======================================//
         ScheduleList scheduleList = new ScheduleList(this, employeeLines);
-
-
         ListView listView = findViewById(R.id.ListView1ID);
         listView.setAdapter(scheduleList);
-        String str = String.valueOf(report);
-        reportTxt.setText(str);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                removeItem(position);
-
-            }
-        });
-
-
     }
-
+    //==== this function will delete single row from sqlite database =========//
     public void deleteName(int position)
     {
         String id_to_delete = vector.get(position);
         String query = "DELETE FROM " + MY_DB_NAME_2 + " WHERE "
                 + ID + " = '" + id_to_delete + "'";
-
         vector.remove(position);
         employeeRecordDB.execSQL(query);
     }
@@ -122,19 +115,18 @@ public class EmployeeRecord extends AppCompatActivity
             @Override
             public void onClick(DialogInterface dialog, int which)
             {
+                //===== this two line will delete the current row from the list view and display the new one ======//
                 employeeLines.remove(position);
-                ScheduleList scheduleList = new ScheduleList(EmployeeRecord.this, employeeLines);
-                ListView listView = findViewById(R.id.ListView1ID);
-                listView.setAdapter(scheduleList);
-                deleteName(position);
-                report--;
-                String str = String.valueOf(report);
-                reportTxt.setText(str);
-
+                deleteName(position);// call the function that will delete that row from the saving data
+                vector.removeAllElements();// reset back the vector to get ready to set a new list
+                //====== recet back the timer variable =============================================//
+                report = 0;hoursInMillisecond = 0;minutesInMilliseconds = 0;secondsInMilliseconds = 0;
+                hours = minutes = seconds = 0; update = 0;
+                //==================================================================================//
+                createDataList();//set the new list after delete and display it
                 Toast.makeText(EmployeeRecord.this, "Item REMOVED!", Toast.LENGTH_LONG).show();
             }
         });
-
         builder.setNegativeButton("NO", new DialogInterface.OnClickListener()
         {
             @Override
@@ -143,7 +135,6 @@ public class EmployeeRecord extends AppCompatActivity
                 Toast.makeText(EmployeeRecord.this, "Item NOT removed!", Toast.LENGTH_LONG).show();
             }
         });
-
         builder.show();
     }
     public void calculateHours(String total)
@@ -164,9 +155,6 @@ public class EmployeeRecord extends AppCompatActivity
         hours = minutes / 60;
         seconds = seconds % 60;
         minutes = minutes % 60;
-
-
-
     }
     public long getHoursInMilliseconds(int hours)
     {
