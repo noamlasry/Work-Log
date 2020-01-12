@@ -2,6 +2,7 @@ package com.noamls_amirbs.worklog;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.content.ContextCompat;
 
@@ -320,8 +321,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .putExtra(CalendarContract.EXTRA_EVENT_BEGIN_TIME, beginTime.getTimeInMillis())
                 .putExtra(CalendarContract.EXTRA_EVENT_END_TIME, endTime.getTimeInMillis())
                 .putExtra(CalendarContract.Events.TITLE, "Work")
-                .putExtra(CalendarContract.Events.DESCRIPTION, "Group class")
-                .putExtra(CalendarContract.Events.EVENT_LOCATION, "The gym")
                 .putExtra(CalendarContract.Events.AVAILABILITY, CalendarContract.Events.AVAILABILITY_BUSY)
                 .putExtra(Intent.EXTRA_EMAIL, "noamlasry02@gmail.com,noamlasry02@gmail.com");
         startActivity(intent);
@@ -427,11 +426,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         .setMessage("Do you really want to exit the app?")
                         .setCancelable(false)
                         .setPositiveButton("Yes",new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog,int id)
+                            @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+                            public void onClick(DialogInterface dialog, int id)
                             {
-                               // MainActivity.this.finish();
-                              //  android.os.Process.killProcess(android.os.Process.myPid());
-                                finish();
+                                finishAndRemoveTask();
+                                finishAffinity();
+
+
                             }
                         })
                         .setNegativeButton("No",new DialogInterface.OnClickListener() {

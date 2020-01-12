@@ -39,7 +39,7 @@ public class GpsService extends Service
     private static String CHANNEL_ID = "channel";
     private static String CHANNEL_NAME = "Channel Work Log App";
     private static int notificationId = 1;
-    boolean activeNotification = true;
+    boolean activeNotification = true,activeNotification2 = true;
 
 
     //=== have to implement as service aap, dos't do nothing
@@ -64,7 +64,7 @@ public class GpsService extends Service
                 //====== use sharedPreferences to save GPS button enable setting ====================//
 
                 Log.d("debug","location :"+location.getLatitude()+" "+location.getLongitude());
-                // Karme Tzure location
+                // Karme Tzure location - 1
                 if(latitude > 31.6070 && latitude < 31.6080  && longitude > 35.0980 && longitude < 35.0990)
                 {
                     editor.putBoolean("inArea", true);
@@ -81,6 +81,24 @@ public class GpsService extends Service
                     editor.commit();
                     Log.d("debug","outside area");
                     activeNotification = true;
+                }
+                // Karme Tzure Gate location
+                if(latitude > 31.6060 && latitude < 31.6070  && longitude > 35.0995 && longitude < 35.1005)
+                {
+                    editor.putBoolean("inArea", true);
+                    editor.commit();
+                    if(activeNotification2)
+                    {
+                        showNotification("Notification Message", "you get your work, click me to sign in");
+                        activeNotification2 = false;
+                    }
+                }
+                else
+                {
+                    editor.putBoolean("inArea", false);
+                    editor.commit();
+                    Log.d("debug","outside area");
+                    activeNotification2 = true;
                 }
 
             }

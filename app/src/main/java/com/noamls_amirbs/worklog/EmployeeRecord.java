@@ -1,5 +1,6 @@
 package com.noamls_amirbs.worklog;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.app.Activity;
@@ -8,6 +9,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -172,12 +174,15 @@ public class EmployeeRecord extends AppCompatActivity
     }
 
     // use to override the original 'back button' that on the device, and get back to the previous activity
+    @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void onBackPressed()
     {
+
         Intent intent=new Intent(this,MainActivity.class);
         intent.putExtra("sign",10);
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
+        finishAffinity();
 
     }
     public void createDB()
