@@ -46,11 +46,12 @@ public class EmployeeRecord extends AppCompatActivity
         reportTxt = (TextView)findViewById(R.id.report_txt);
         hoursTxt = (TextView)findViewById(R.id.hours_txt);
 
-        createDataList();
+        createDataList();//withdraw the data from sqlite and display it in list view
+        //========== this three bottom lines here to enable the list to clickable=========================//
         ScheduleList scheduleList = new ScheduleList(this, employeeLines);
         ListView listView = findViewById(R.id.ListView1ID);
         listView.setAdapter(scheduleList);
-        //===== one short click on sigle row on the list, and the user can remove the current item ====//
+        //===== one short click on single row on the list, and the user can remove the current item ====//
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) { removeItem(position);
@@ -58,6 +59,7 @@ public class EmployeeRecord extends AppCompatActivity
         });
 
     }
+    //========= create the list from sqlite database =========//
     public void createDataList()
     {
         createDB();// create database, if exist just open it
@@ -73,15 +75,15 @@ public class EmployeeRecord extends AppCompatActivity
         if (cursor.moveToFirst())
         {
             do {
-                report++;
+                report++;//add report for any iteration that will come up
                 String id = cursor.getString(idColumn); String total = cursor.getString(totalColumn);
                 String exit = cursor.getString(exitColumn); String inter = cursor.getString(interColumn);
                 String date = cursor.getString(dateColumn);
 
-                vector.addElement(id);
-                calculateHours(total);
+                vector.addElement(id);// i create this vector to enable to remove immediately row from list view
+                calculateHours(total);// this function will calculate the total time shifts
+                //== create a single Employee and added him to the list view =============================================================================//
                 EmployeeLine employeeLine = new EmployeeLine(total,exit,inter,date);
-
                 employeeLines.add(new EmployeeLine(employeeLine.getTotal(),employeeLine.getExitClock(),employeeLine.getInterClock(),employeeLine.getDate()));
 
             } while (cursor.moveToNext());
@@ -104,7 +106,7 @@ public class EmployeeRecord extends AppCompatActivity
         vector.remove(position);
         employeeRecordDB.execSQL(query);
     }
-
+    // === remove a single row ====================================================================//
     private void removeItem(final int position)
     {
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -137,41 +139,37 @@ public class EmployeeRecord extends AppCompatActivity
         });
         builder.show();
     }
+    //=== calculate the total shift time ===========================================================//
     public void calculateHours(String total)
     {
         String[] parts = total.split(":");
-
-        hours = Integer.parseInt(parts[0]);
-        minutes = Integer.parseInt(parts[1]);
-        seconds = Integer.parseInt(parts[2]);
-        hoursInMillisecond +=  getHoursInMilliseconds(hours);
-        minutesInMilliseconds += getMinuteInMilliseconds(minutes);
+        hours = Integer.parseInt(parts[0]);minutes = Integer.parseInt(parts[1]); seconds = Integer.parseInt(parts[2]);
+        hoursInMillisecond +=  getHoursInMilliseconds(hours); minutesInMilliseconds += getMinuteInMilliseconds(minutes);
         secondsInMilliseconds += getSecondInMilliseconds(seconds);
         long allMilliseconds = hoursInMillisecond+minutesInMilliseconds+secondsInMilliseconds;
 
-        update =  allMilliseconds;
-        seconds = (int) (update / 1000);
-        minutes = seconds / 60;
-        hours = minutes / 60;
-        seconds = seconds % 60;
-        minutes = minutes % 60;
+        update =  allMilliseconds;seconds = (int) (update / 1000);
+        minutes = seconds / 60;hours = minutes / 60;
+        seconds = seconds % 60;minutes = minutes % 60;
     }
+    //=== get hour and return it in milliseconds =====//
     public long getHoursInMilliseconds(int hours)
     {
         long milliseconds = hours * 60 * 60 *1000;
         return milliseconds;
     }
+    //=== get minute and return it in milliseconds =====//
     public long getMinuteInMilliseconds(int minute)
     {
         long milliseconds = minute  * 60 *1000;
         return milliseconds;
     }
+    //=== get second and return it in milliseconds =====//
     public long getSecondInMilliseconds(int second)
     {
         long milliseconds = second  *1000;
         return milliseconds;
     }
-
 
     // use to override the original 'back button' that on the device, and get back to the previous activity
     public void onBackPressed()
@@ -192,9 +190,5 @@ public class EmployeeRecord extends AppCompatActivity
         }
         catch (Exception e) { Log.d("debug", "Error Creating Database"); }
     }
-    public void onDestroy() {
-
-        super.onDestroy();
-        employeeRecordDB.close();
-    }
+    public void onDestroy() { super.onDestroy();employeeRecordDB.close(); }
 }
