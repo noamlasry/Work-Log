@@ -11,6 +11,7 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.media.MediaPlayer;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
@@ -39,8 +40,6 @@ public class GpsService extends Service
     private static String CHANNEL_ID = "channel";
     private static String CHANNEL_NAME = "Channel Work Log App";
     private static int notificationId = 1;
-    boolean activeNotification = true,activeNotification2 = true;
-
 
     //=== have to implement as service aap, dos't do nothing
     public IBinder onBind(Intent intent) { return null; }
@@ -48,15 +47,14 @@ public class GpsService extends Service
     @SuppressLint("MissingPermission")
     public void onCreate()
     {
-
         //=== check device version ======//
         setupNotificationChannel();
-        final MainActivity mainActivity = new MainActivity();
         listener = new LocationListener()
         {
             @Override
             public void onLocationChanged(Location location)
             {
+
                 SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
                 SharedPreferences.Editor editor = sp.edit();
                 double latitude = round(location.getLatitude(),4);
@@ -64,15 +62,19 @@ public class GpsService extends Service
                 //====== use sharedPreferences to save GPS button enable setting ====================//
 
                 Log.d("debug","location :"+location.getLatitude()+" "+location.getLongitude());
-                // Karme Tzure location - 1
-                if(latitude > 31.6070 && latitude < 31.6080  && longitude > 35.0980 && longitude < 35.0990)
+
+                boolean GPS_on_or_of = sp.getBoolean("set_GPS_button",false);
+                // Karme Tzure Gate location
+                if((latitude > 31.6060 && latitude < 31.6070  && longitude > 35.0995 && longitude < 35.1005)&&GPS_on_or_of)
                 {
                     editor.putBoolean("inArea", true);
                     editor.commit();
+                    boolean activeNotification = sp.getBoolean("activeNotification",false);
                     if(activeNotification)
                     {
                         showNotification("Notification Message", "you get your work, click me to sign in");
-                        activeNotification = false;
+                        editor.putBoolean("activeNotification", false);
+                        editor.commit();
                     }
                 }
                 else
@@ -80,25 +82,8 @@ public class GpsService extends Service
                     editor.putBoolean("inArea", false);
                     editor.commit();
                     Log.d("debug","outside area");
-                    activeNotification = true;
-                }
-                // Karme Tzure Gate location
-                if(latitude > 31.6060 && latitude < 31.6070  && longitude > 35.0995 && longitude < 35.1005)
-                {
-                    editor.putBoolean("inArea", true);
+                    editor.putBoolean("activeNotification", true);
                     editor.commit();
-                    if(activeNotification2)
-                    {
-                        showNotification("Notification Message", "you get your work, click me to sign in");
-                        activeNotification2 = false;
-                    }
-                }
-                else
-                {
-                    editor.putBoolean("inArea", false);
-                    editor.commit();
-                    Log.d("debug","outside area");
-                    activeNotification2 = true;
                 }
 
             }
@@ -144,12 +129,11 @@ public class GpsService extends Service
         Uri uri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setSmallIcon(R.drawable.ic_notifications)
+                .setSmallIcon(R.drawable.ic_alarm_on_black_24dp)
                 .setContentTitle(notificationTitle)
                 .setContentText(notificationText)
                 .setContentIntent(pendingIntent)
                 .setSound(uri)
-                //.setOngoing(true)
                 .setAutoCancel(true)
                 .build();
 
@@ -160,15 +144,16 @@ public class GpsService extends Service
     public void onDestroy()
     {
         super.onDestroy();
-     //   if(locationManager != null)
-      //     locationManager.removeUpdates(listener);
+        if(locationManager != null)
+           locationManager.removeUpdates(listener);
 
     }
-    private static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        BigDecimal bd = new BigDecimal(Double.toString(value));
-        bd = bd.setScale(places, RoundingMode.HALF_UP);
-        return bd.doubleValue();
+    //get a double number and return the same double number with n 'places' after the point
+    private static double round(double value, int places)
+    {
+          if (places < 0) throw new IllegalArgumentException();
+          BigDecimal bd = new BigDecimal(Double.toString(value));
+          bd = bd.setScale(places, RoundingMode.HALF_UP);
+          return bd.doubleValue();
     }
 }

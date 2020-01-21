@@ -8,7 +8,7 @@ import android.widget.ArrayAdapter;
 import android.widget.TextView;
 import java.util.ArrayList;
 
-
+// use to adapt employee list
 public class ScheduleList extends ArrayAdapter<EmployeeLine>
 {
     ScheduleList (Activity context, ArrayList<EmployeeLine> employeeList)

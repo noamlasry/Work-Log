@@ -5,10 +5,9 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 
-/**
- * Created by AbhiAndroid
- */
 
+// an simple splash screen, move to MainActivity after three seconds
+//use by thread
 public class SplashActivity extends Activity {
 
     Handler handler;

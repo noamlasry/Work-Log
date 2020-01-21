@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Handler handler;
     private TextView textTimer;
     int second, minute, hours, milliscond;
-    long milliseconfTime, startTime, TimeBuff, update = 0L,startTimeShiftInMilli;
+    long milliseconfTime, startTime, TimeBuff, update = 0L;
     String startTimeShift = "----";
     //==== this button control the employee in, out, and record ================//
     Button insertButton, exitButton, employeeRecordBut,deleteRecord;
@@ -144,9 +144,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
 
             case R.id.exit_btn:
-                createEvent();
-                resetTimer();
-                addEventToCalendar();
+                createEvent();// write to sqlite the new enevt
+                resetTimer();// rest the timer to get ready to the next shift
+                addEventToCalendar();//let the user the option of creating event in calendar
                 editor.putString("beginTime",null);
                 editor.putBoolean("wasInsert", false);//indicate that now we can click again on the insert button
                 editor.commit();
@@ -154,12 +154,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     insertButton.setEnabled(true);
                 break;
 
-            case R.id.employee_record_but:
-
+            case R.id.employee_record_but://once the user click on the button, the record activity will be show up
                 Intent intent = new Intent(MainActivity.this, EmployeeRecord.class);
                 startActivity(intent);
                 break;
-            case R.id.delete_record:
+            case R.id.delete_record://erase all the employee record
                 deleteRecordData();
                 break;
         }
@@ -171,7 +170,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
         alertDialogBuilder.setTitle("Delete Record");// set title
 
-        // set dialog message
         alertDialogBuilder
                 .setMessage("Do you really want to delete all?")
                 .setCancelable(false)
@@ -197,7 +195,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         handler.postDelayed(activeTimer, 0);
         startTimeShift = getCurrentTime();
     }
-
+    //return the last begin time to set the activate the timer correspondingly
     public void lastBeginTime()
     {
         SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
@@ -366,7 +364,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
         return false;
     }
-
+    // ask for permission
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults)
     {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -380,12 +378,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     protected void onDestroy()
     {
         super.onDestroy();
-//        employeeRecordDB.close();
         SharedPreferences sp = getSharedPreferences("MyPref", Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sp.edit();
         editor.putBoolean("wasDestroy", true);
         editor.commit();
     }
+    // three point menu, agive access to exit the app and getting to the setting app
     public boolean onCreateOptionsMenu(Menu menu)
     {
         super.onCreateOptionsMenu(menu);

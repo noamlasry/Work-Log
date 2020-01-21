@@ -49,14 +49,16 @@ public class EmployeeRecord extends AppCompatActivity
         hoursTxt = (TextView)findViewById(R.id.hours_txt);
 
         createDataList();//withdraw the data from sqlite and display it in list view
-        //========== this three bottom lines here to enable the list to clickable=========================//
+        //========== this three bottom here to enable the list to be clickable=========================//
         ScheduleList scheduleList = new ScheduleList(this, employeeLines);
         ListView listView = findViewById(R.id.ListView1ID);
         listView.setAdapter(scheduleList);
         //===== one short click on single row on the list, and the user can remove the current item ====//
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) { removeItem(position);
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id)
+            {
+                removeItem(position);
             }
         });
 
@@ -105,8 +107,9 @@ public class EmployeeRecord extends AppCompatActivity
         String id_to_delete = vector.get(position);
         String query = "DELETE FROM " + MY_DB_NAME_2 + " WHERE "
                 + ID + " = '" + id_to_delete + "'";
-        vector.remove(position);
         employeeRecordDB.execSQL(query);
+        vector.remove(position);
+
     }
     // === remove a single row ====================================================================//
     private void removeItem(final int position)
@@ -177,10 +180,8 @@ public class EmployeeRecord extends AppCompatActivity
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
     public void onBackPressed()
     {
-
         Intent intent=new Intent(this,MainActivity.class);
         intent.putExtra("sign",10);
-        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(intent);
         finishAffinity();
 

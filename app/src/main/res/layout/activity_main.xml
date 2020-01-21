@@ -32,7 +32,7 @@
             android:layout_marginTop="150px"
             android:layout_weight="0"
             android:background="@drawable/insert_button"
-            android:text="Insert" />
+            android:text="start" />
     </LinearLayout>
 
     <TextView
@@ -63,15 +63,20 @@
         android:layout_width="600px"
         android:layout_marginTop="100px"
         android:layout_marginLeft="250px"
-        android:background="@android:color/holo_blue_dark"
+        android:textColor="@android:color/black"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:background="@drawable/my_button_bg"
         android:layout_height="wrap_content"
         android:text="Employee record" />
 
     <Button
         android:layout_marginLeft="250px"
+        android:layout_marginTop="10px"
         android:id="@+id/delete_record"
         android:layout_width="600px"
-        android:background="@android:color/holo_red_dark"
+        android:textColor="@android:color/black"
+        style="@style/Widget.AppCompat.Button.Colored"
+        android:background="@drawable/my_button_delete"
         android:layout_height="wrap_content"
         android:text="Delete all record" />
 
@@ -83,22 +88,22 @@
 
 
         <Button
-            android:layout_marginLeft="210px"
-            android:layout_width="wrap_content"
-            android:background="@android:color/transparent"
-            android:layout_height="wrap_content"
-            android:text="Set GPS"
             android:id="@+id/button"
-            android:layout_alignParentBottom="true"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentStart="true"
             android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
+            android:layout_alignParentBottom="true"
+            android:layout_marginLeft="210px"
+            android:background="@android:color/transparent"
+            android:text="Enable GPS" />
 
         <Button
             android:layout_marginLeft="180px"
             android:background="@android:color/transparent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Enable GPS"
+            android:text="disable GPS"
             android:id="@+id/button2"
             android:layout_alignTop="@+id/button"
             android:layout_alignParentRight="true"

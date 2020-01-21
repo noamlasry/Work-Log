@@ -5,7 +5,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@drawable/note"
+    android:background="@drawable/backgr"
     tools:context=".EmployeeRecord">
 
     <LinearLayout
@@ -16,7 +16,7 @@
         <TextView
 
             android:text="Date:"
-            android:textColor="@android:color/holo_blue_dark"
+            android:textColor="@android:color/black"
             android:textSize="80px"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
@@ -53,17 +53,12 @@
 
         </TextView>
 
-
-
-
-
-
     </LinearLayout>
 
     <ListView
         android:id="@+id/ListView1ID"
-        android:layout_width="fill_parent"
-        android:layout_height="501dp"
+        android:layout_width="wrap_content"
+        android:layout_height="498dp"
         android:layout_marginTop="30px" />
 
     <LinearLayout
@@ -73,6 +68,7 @@
 
 
         <TextView
+
             android:text="Hours:"
             android:textSize="80px"
             android:layout_marginLeft="20px"
